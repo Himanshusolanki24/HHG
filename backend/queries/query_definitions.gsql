@@ -1,0 +1,196 @@
+-- K-hop neighbourhood around a subject
+CREATE QUERY get_neighbourhood(
+    subject STRING,
+    k INT DEFAULT 3
+) GRAPH FraudGraph {
+  Result = SELECT * FROM Customer, Account, Card, Transaction, Device, IP, Email
+    WHERE id == subject OR id IN (
+      SELECT tgt.id FROM Account AS src, used_device AS e, Device AS tgt
+      WHERE src.id == subject AND e.$srcVertexId == src.id
+      INTERSECT
+      SELECT tgt.id FROM Account AS src, shares_email AS e, Email AS tgt
+      WHERE src.id == subject AND e.$srcVertexId == src.id
+    ) LIMIT 100;
+  PRINT Result;
+}
+
+-- Shared-device rings
+CREATE QUERY shared_device_ring(
+    device_id STRING,
+    k INT DEFAULT 2
+) GRAPH FraudGraph {
+  Ring = SELECT tgt FROM Device AS src, BOUND_TO AS e, Account AS tgt
+    WHERE src.id == device_id AND e.$srcVertexId == src.id
+    INTERSECT
+    SELECT src FROM Account AS tgt, USES AS e, Device AS src
+    WHERE tgt.id == device_id AND e.$srcVertexId == tgt.id
+    POST-AGGREGATE COUNT(*) AS degree;
+  PRINT Ring;
+}
+
+-- Shared-email rings
+CREATE QUERY shared_email_ring(
+    email_id STRING
+) GRAPH FraudGraph {
+  Ring = SELECT tgt FROM Email AS src, shares_email AS e, Account AS tgt
+    WHERE src.id == email_id AND e.$srcVertexId == src.id;
+  PRINT Ring;
+}
+
+-- Money movement chains with hop count and value
+CREATE QUERY money_movement_chain(
+    start_account STRING,
+    max_hops INT DEFAULT 5
+) GRAPH FraudGraph {
+  Chain = SELECT tgt FROM Account AS src, transfers_to AS e, Account AS tgt
+    WHERE src.id == start_account
+    ACCUM e.weight AS total_value, MIN(src.id) AS path_start
+    POST-AGGREGATE SUM(e.weight) AS chain_value, COUNT(*) AS hop_count;
+  PRINT Chain;
+}
+
+-- Velocity and behavioural deviation
+CREATE QUERY velocity_deviation(
+    account_id STRING,
+    window_minutes INT DEFAULT 60
+) GRAPH FraudGraph {
+  Activity = SELECT src FROM Transaction AS src
+    WHERE src.$account == account_id AND src.at >= datetime_add(NOW(), -window_minutes)
+    POST-AGGREGATE COUNT(*) AS tx_count, SUM(src.amount) AS total_amount;
+  Baseline = SELECT src FROM Transaction AS src
+    WHERE src.$account == account_id AND src.at < datetime_add(NOW(), -window_minutes)
+    POST-AGGREGATE AVG(src.amount) AS avg_amount, COUNT(*) AS avg_count;
+  PRINT Activity, Baseline;
+}
+
+-- Prior case similarity via vector search
+CREATE QUERY prior_case_similarity(
+    pattern STRING,
+    k INT DEFAULT 5
+) GRAPH FraudGraph {
+  Cases = SELECT * FROM Case
+    WHERE pattern == pattern
+    ORDER BY cosine_similarity(embedding, (SELECT embedding FROM Case WHERE id == pattern))
+    LIMIT k;
+  PRINT Cases;
+}
+
+-- Connected components for fraud ring detection
+CREATE QUERY fraud_ring_components() GRAPH FraudGraph {
+  Components = ALL_SHORTEST_PATHS(Account, transfers_to);
+  PRINT Components;
+}
+
+-- PageRank for identifying key nodes in fraud network
+CREATE QUERY fraud_pagerank() GRAPH FraudGraph {
+  Result = PAGERANK(Account, transfers_to, 20);
+  PRINT Result;
+}
+
+-- Shortest path between two entities
+CREATE QUERY shortest_path_between(
+    source STRING,
+    target STRING
+) GRAPH FraudGraph {
+  Path = SHORTEST_PATH(source, target, transfers_to);
+  PRINT Path;
+}
+
+-- Micro-authorization burst detection
+CREATE QUERY micro_auth_burst(
+    card_id STRING,
+    window_minutes INT DEFAULT 15,
+    max_amount FLOAT DEFAULT 2.00
+) GRAPH FraudGraph {
+  Burst = SELECT src FROM Transaction AS src, CHARGED AS e, Card AS tgt
+    WHERE tgt.id == card_id AND src.amount <= max_amount
+    AND src.at >= datetime_add(NOW(), -window_minutes)
+    POST-AGGREGATE COUNT(*) AS micro_count, MIN(src.at) AS first_at, MAX(src.at) AS last_at;
+  PRINT Burst;
+}
+
+-- Inbound fan-in pattern
+CREATE QUERY inbound_fan_in(
+    account_id STRING,
+    window_hours INT DEFAULT 18
+) GRAPH FraudGraph {
+  Senders = SELECT src FROM Account AS src, transfers_to AS e, Account AS tgt
+    WHERE tgt.id == account_id AND e.$srcVertexId == src.id
+    AND src.at >= datetime_add(NOW(), -window_hours)
+    POST-AGGREGATE COUNT(DISTINCT src.id) AS sender_count, SUM(e.weight) AS total_in;
+  PRINT Senders;
+}
+
+-- Outbound destinations
+CREATE QUERY outbound_destinations(
+    account_id STRING,
+    window_hours INT DEFAULT 2
+) GRAPH FraudGraph {
+  Outs = SELECT tgt FROM Account AS src, transfers_to AS e, Account AS tgt
+    WHERE src.id == account_id AND e.$srcVertexId == src.id
+    AND src.at >= datetime_add(NOW(), -window_hours)
+    POST-AGGREGATE SUM(e.weight) AS total_out;
+  PRINT Outs;
+}
+
+-- Common point of purchase
+CREATE QUERY common_point_of_purchase(
+    card_ids ARRAY<STRING>,
+    lookback_days INT DEFAULT 60
+) GRAPH FraudGraph {
+  Common = SELECT src FROM Transaction AS src, CHARGED AS e, Card AS tgt
+    WHERE tgt.id IN card_ids AND src.at >= datetime_add(NOW(), -lookback_days)
+    POST-AGGREGATE COUNT(DISTINCT tgt.id) AS shared_merchants;
+  PRINT Common;
+}
+
+-- Payee history
+CREATE QUERY payee_history(
+    account_id STRING,
+    payee_id STRING
+) GRAPH FraudGraph {
+  History = SELECT src FROM Transaction AS src, RECEIVED_BY AS e, Account AS tgt
+    WHERE src.$account == account_id AND tgt.id == payee_id;
+  PRINT History;
+}
+
+-- Beneficiary inbound activity
+CREATE QUERY beneficiary_inbound(
+    payee_id STRING,
+    window_hours INT DEFAULT 24
+) GRAPH FraudGraph {
+  Inbound = SELECT src FROM Account AS src, transfers_to AS e, Account AS tgt
+    WHERE tgt.id == payee_id AND e.$srcVertexId == src.id
+    AND src.at >= datetime_add(NOW(), -window_hours)
+    POST-AGGREGATE COUNT(DISTINCT src.id) AS sender_count, SUM(e.weight) AS total_in;
+  PRINT Inbound;
+}
+
+-- Shared device 2-hop
+CREATE QUERY shared_device_2hop(
+    device_id STRING
+) GRAPH FraudGraph {
+  Path = SELECT tgt FROM Device AS src, BOUND_TO AS e, Account AS tgt
+    WHERE src.id == device_id
+    INTERSECT
+    SELECT tgt FROM Account AS src2, SUBJECT_OF AS e2, Case AS tgt
+    WHERE src2.id IN (SELECT tgt FROM Device AS src, BOUND_TO AS e, Account AS tgt WHERE src.id == device_id);
+  PRINT Path;
+}
+
+CREATE INSTALL QUERY get_neighbourhood;
+CREATE INSTALL QUERY shared_device_ring;
+CREATE INSTALL QUERY shared_email_ring;
+CREATE INSTALL QUERY money_movement_chain;
+CREATE INSTALL QUERY velocity_deviation;
+CREATE INSTALL QUERY prior_case_similarity;
+CREATE INSTALL QUERY fraud_ring_components;
+CREATE INSTALL QUERY fraud_pagerank;
+CREATE INSTALL QUERY shortest_path_between;
+CREATE INSTALL QUERY micro_auth_burst;
+CREATE INSTALL QUERY inbound_fan_in;
+CREATE INSTALL QUERY outbound_destinations;
+CREATE INSTALL QUERY common_point_of_purchase;
+CREATE INSTALL QUERY payee_history;
+CREATE INSTALL QUERY beneficiary_inbound;
+CREATE INSTALL QUERY shared_device_2hop;

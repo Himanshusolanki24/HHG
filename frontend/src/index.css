@@ -1,0 +1,101 @@
+@import 'tailwindcss';
+
+/* Tokens. Slate base, one accent (periwinkle) for anything interactive,
+   green/amber/red reserved for risk only. Confidence is drawn in neutral ink, never a risk colour. */
+:root, [data-theme='dark'] {
+  --bg: #0d1217;
+  --panel: #121920;
+  --raised: #18212a;
+  --line: #222d38;
+  --line-strong: #33414f;
+  --fg: #d6dee6;
+  --muted: #8b99a8;
+  --faint: #5b6979;
+  --accent: #9b95ff;
+  --accent-ink: #0d1217;
+  --accent-soft: rgb(155 149 255 / 0.14);
+  --conf: #c3ccd6;
+  --risk-low: #3db37a;
+  --risk-med: #e2a23a;
+  --risk-high: #e5564e;
+  --t-account: #8fa6c0; --t-card: #a898c8; --t-device: #7fb0b8; --t-email: #a9a39a;
+  --t-ip: #9aa0b3; --t-transaction: #6f7f96; --t-prior_case: #b690a8;
+  color-scheme: dark;
+}
+[data-theme='light'] {
+  --bg: #eef1f4;
+  --panel: #ffffff;
+  --raised: #ffffff;
+  --line: #dbe1e7;
+  --line-strong: #c3ccd5;
+  --fg: #16202b;
+  --muted: #536276;
+  --faint: #8492a2;
+  --accent: #4b43c9;
+  --accent-ink: #ffffff;
+  --accent-soft: rgb(75 67 201 / 0.1);
+  --conf: #36424f;
+  --risk-low: #1b8653;
+  --risk-med: #b0741a;
+  --risk-high: #c6342d;
+  --t-account: #6f89a8; --t-card: #8a78ae; --t-device: #5f949d; --t-email: #8f887d;
+  --t-ip: #7c8397; --t-transaction: #56667d; --t-prior_case: #9a7189;
+  color-scheme: light;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-panel: var(--panel);
+  --color-raised: var(--raised);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-fg: var(--fg);
+  --color-muted: var(--muted);
+  --color-faint: var(--faint);
+  --color-accent: var(--accent);
+  --color-accent-ink: var(--accent-ink);
+  --color-accent-soft: var(--accent-soft);
+  --color-conf: var(--conf);
+  --color-risk-low: var(--risk-low);
+  --color-risk-med: var(--risk-med);
+  --color-risk-high: var(--risk-high);
+  --font-sans: 'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+  --text-2xs: 11px; --text-2xs--line-height: 16px;
+  --text-xs: 12px;  --text-xs--line-height: 16px;
+  --text-sm: 13px;  --text-sm--line-height: 20px;
+  --text-base: 14px; --text-base--line-height: 20px;
+  --text-lg: 16px;  --text-lg--line-height: 24px;
+  --text-xl: 20px;  --text-xl--line-height: 28px;
+  --text-2xl: 28px; --text-2xl--line-height: 32px;
+  --radius-sm: 2px;
+  --radius: 4px;
+}
+
+html, body, #root { height: 100%; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  line-height: 20px;
+  font-variant-numeric: tabular-nums;
+  -webkit-font-smoothing: antialiased;
+}
+@layer base { *, ::before, ::after { border-color: var(--line); } }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; border-radius: 2px; }
+::selection { background: var(--accent-soft); }
+
+.skeleton { background: var(--line); border-radius: 2px; animation: pulse 1.4s ease-in-out infinite; }
+@keyframes pulse { 50% { opacity: 0.45; } }
+
+/* Confidence band: neutral hatching so it never reads as a risk colour. */
+.hatch { background-image: repeating-linear-gradient(135deg, var(--conf) 0 1px, transparent 1px 4px); }
+
+details > summary { list-style: none; cursor: pointer; }
+details > summary::-webkit-details-marker { display: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}

@@ -1,0 +1,23 @@
+[project]
+name = "fraud-investigation-backend"
+version = "0.1.0"
+requires-python = ">=3.11"
+dependencies = [
+    "pyTigerGraph>=2.0",
+    "fastapi>=0.141",
+    "uvicorn>=0.53",
+    "langgraph>=1.2",
+    "langchain-openai>=1.6",
+    "pydantic>=2.13",
+    "python-dotenv>=1.2",
+    "httpx>=0.28",
+    "requests>=2.34",
+    "pytest>=9.1",
+    "pytest-asyncio>=1.4",
+    "structlog>=24",
+    "tenacity>=9.1",
+    "PyYAML>=6.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest", "pytest-asyncio"]
