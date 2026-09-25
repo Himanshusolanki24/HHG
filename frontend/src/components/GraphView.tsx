@@ -7,11 +7,11 @@ import type { EntityType } from '../api/schemas.ts'
 import { Button, Prov, RiskChip, Skeleton, cn } from './ui.tsx'
 
 export const ENTITY: Record<EntityType, { label: string; shape: cytoscape.Css.NodeShape }> = {
-  account: { label: 'Account', shape: 'round-rectangle' },
+  customer: { label: 'Customer', shape: 'round-rectangle' },
   card: { label: 'Card', shape: 'rectangle' },
-  device: { label: 'Device', shape: 'hexagon' },
-  email: { label: 'Email', shape: 'tag' },
-  ip: { label: 'IP address', shape: 'diamond' },
+  device: { label: 'Device profile', shape: 'hexagon' },
+  email: { label: 'Email domain', shape: 'tag' },
+  region: { label: 'Billing region', shape: 'diamond' },
   transaction: { label: 'Transaction', shape: 'ellipse' },
   prior_case: { label: 'Prior case', shape: 'octagon' },
 }
@@ -209,11 +209,11 @@ export function Legend({ className }: { className?: string }) {
 function Shape({ type }: { type: EntityType }) {
   const fill = `var(--t-${type})`
   const p: Record<EntityType, React.ReactNode> = {
-    account: <rect x="1" y="2" width="10" height="8" rx="2" fill={fill} />,
+    customer: <rect x="1" y="2" width="10" height="8" rx="2" fill={fill} />,
     card: <rect x="1" y="2" width="10" height="8" fill={fill} />,
     device: <polygon points="3,1 9,1 12,6 9,11 3,11 0,6" fill={fill} />,
     email: <polygon points="1,2 8,2 11,6 8,10 1,10" fill={fill} />,
-    ip: <polygon points="6,0 12,6 6,12 0,6" fill={fill} />,
+    region: <polygon points="6,0 12,6 6,12 0,6" fill={fill} />,
     transaction: <circle cx="6" cy="6" r="5" fill={fill} />,
     prior_case: <polygon points="4,1 8,1 11,4 11,8 8,11 4,11 1,8 1,4" fill={fill} />,
   }

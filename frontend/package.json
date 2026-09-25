@@ -8,7 +8,8 @@
     "build": "tsc -b && vite build",
     "lint": "oxlint",
     "preview": "vite preview",
-    "check": "node src/derive.check.ts"
+    "check": "node src/derive.check.ts",
+    "sync": "cp ../backend/runs/*.json src/fixtures/"
   },
   "dependencies": {
     "@radix-ui/react-alert-dialog": "^1.1.23",

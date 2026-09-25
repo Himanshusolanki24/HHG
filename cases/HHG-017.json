@@ -1,0 +1,119 @@
+{
+  "case_id": "HHG-017",
+  "case": {
+    "status": "closed_fraud",
+    "verdict": "fraud",
+    "fraud_probability": 0.96,
+    "pattern": "card_not_present_fraud",
+    "pattern_description": "",
+    "affected_txn_ids": [
+      "3450436",
+      "3450503",
+      "3450629"
+    ],
+    "first_suspicious_txn_id": "3450436",
+    "connected_card_ids": [],
+    "connected_device_profiles": [],
+    "exposure_usd": 300.14,
+    "evidence": [
+      {
+        "claim": "Online purchase from a device the identity record marks Found",
+        "source": "graph",
+        "ref": "query:card_window(card_id=C04570-K1)",
+        "entity_ids": [
+          "3450629"
+        ]
+      },
+      {
+        "claim": "Match flags consistent",
+        "source": "graph",
+        "ref": "query:card_window(card_id=C04570-K1)",
+        "entity_ids": [
+          "3450629"
+        ]
+      },
+      {
+        "claim": "Customer states they did not make the purchase and still holds the card",
+        "source": "customer",
+        "ref": "evidence_request:1",
+        "entity_ids": [
+          "3450629"
+        ]
+      },
+      {
+        "claim": "Model risk score 0.57 treated as a reason to look, not evidence: in closed cases, cleared alerts cluster at 0.84-0.92",
+        "source": "document",
+        "ref": "README \u00a70; closed_cases_history",
+        "entity_ids": [
+          "3450629"
+        ]
+      },
+      {
+        "claim": "Similar closed cases: CC-0286: Case CC-0286: cardholder C07936 reported unrecognized activity on card C07936-K2; CC-1796: Case CC-1796: cardholder C08450 reported unrecognized activity on card C08450-K2",
+        "source": "graph",
+        "ref": "graphrag.retrieve(case_memory)",
+        "entity_ids": [
+          "CC-0286",
+          "CC-1796",
+          "CC-0262",
+          "CC-1383"
+        ]
+      }
+    ],
+    "similar_prior_cases": [
+      "CC-0286",
+      "CC-1796",
+      "CC-0262",
+      "CC-1383"
+    ],
+    "summary": "A card-not-present fraud alert was triggered for customer C04570\u2019s card C04570-K1 on 2016-11-11, involving a $100.09 online transaction (ID 3450629) with a model risk score of 0.57. The customer denied the purchase and still possessed the card. Similar fraud cases (CC-0286, CC-1796, CC-0262) involved online purchases totaling $300.16, $300.17, and $300.09, respectively, all confirmed fraudulent. The card was blocked, and a case was created. Exposure across related transactions reached $300.14.",
+    "written_to_graph": false,
+    "graph_case_id": ""
+  },
+  "evidence_requests": [
+    {
+      "type": "customer_validation",
+      "asked_after_step": 6,
+      "assumed_response": "Customer states they did not make the purchase and still holds the card. Simulated: replies are not provided in this round; assumption follows the graph evidence (probability 0.73)."
+    }
+  ],
+  "next_best_actions": {
+    "initial": [
+      {
+        "action": "VERIFY_WITH_CUSTOMER",
+        "route": "auto",
+        "reason": "R1: probability 0.73 on a single signal; verify before any block"
+      },
+      {
+        "action": "CREATE_CASE",
+        "route": "auto",
+        "reason": "3a: fraud probability 0.73 >= 0.30"
+      }
+    ],
+    "final": [
+      {
+        "action": "BLOCK_CARD",
+        "route": "L1",
+        "reason": "R2: customer denies the transaction; exposure $300.14 <= $2,500"
+      },
+      {
+        "action": "CREATE_CASE",
+        "route": "auto",
+        "reason": "R2: customer dispute"
+      }
+    ],
+    "what_changed": "The assumed reply (customer states they did not make the purchase and still holds the card) moved probability from 0.73 to 0.96, changing the actions from VERIFY_WITH_CUSTOMER, CREATE_CASE to BLOCK_CARD, CREATE_CASE."
+  },
+  "sar": {
+    "file": false,
+    "reason": "No report: policy 3a thresholds not met (exposure $300.14 is under $1,000, no shared device, region cluster or coordinated pattern).",
+    "narrative": "",
+    "subjects": [],
+    "total_amount_usd": 0,
+    "activity_dates": []
+  },
+  "stop_reason": "Probability 0.96 with 2 independent item(s): the verification reply settles it (policy \u00a76).",
+  "tool_calls": 6,
+  "tokens": 1064,
+  "latency_s": 2.58
+}

@@ -30,3 +30,6 @@ build/
 .ruff_cache/
 .coverage
 htmlcov/
+
+# Agent data cache (rebuilt from DATA_DIR on first run)
+backend/.cache/

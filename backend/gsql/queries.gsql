@@ -1,0 +1,31 @@
+USE GRAPH FraudGraph
+// The agent's graph tools. Names and outputs mirror data.Store methods, so local and graph runs agree.
+
+CREATE QUERY card_txns(VERTEX<Card> card_id) FOR GRAPH FraudGraph {
+  S = {card_id};
+  txns = SELECT t FROM S:s -(MADE>)- Transaction:t;
+  PRINT txns;
+}
+
+// Every transaction on one device profile in a window: the shared-device (ring) traversal.
+CREATE QUERY device_txns(VERTEX<DeviceProfile> device, DATETIME t0, DATETIME t1) FOR GRAPH FraudGraph {
+  S = {device};
+  txns = SELECT t FROM S:d -(DEVICE_OF>)- Transaction:t WHERE t.ts >= t0 AND t.ts <= t1;
+  PRINT txns;
+}
+
+// Case memory: closed cases that touched any of these transactions.
+CREATE QUERY txn_cases(SET<VERTEX<Transaction>> txns) FOR GRAPH FraudGraph {
+  S = txns;
+  cases = SELECT c FROM S:t -(INVOLVED_IN>)- ClosedCase:c;
+  PRINT cases;
+}
+
+// Case memory for new investigations: earlier InvestigationCase vertices on the same card or connected cards.
+CREATE QUERY prior_investigations(VERTEX<Card> card_id) FOR GRAPH FraudGraph {
+  S = {card_id};
+  cases = SELECT c FROM S:s -((INVESTIGATED_BY|CONNECTED_BY)>)- InvestigationCase:c;
+  PRINT cases;
+}
+
+INSTALL QUERY card_txns, device_txns, txn_cases, prior_investigations

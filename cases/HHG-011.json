@@ -1,0 +1,142 @@
+{
+  "case_id": "HHG-011",
+  "case": {
+    "status": "closed_fraud",
+    "verdict": "fraud",
+    "fraud_probability": 0.72,
+    "pattern": "card_testing",
+    "pattern_description": "",
+    "affected_txn_ids": [
+      "3578277",
+      "3578496",
+      "3578997",
+      "3582142",
+      "3582175",
+      "3582624",
+      "3583368",
+      "3583866",
+      "3584962"
+    ],
+    "first_suspicious_txn_id": "3578277",
+    "connected_card_ids": [],
+    "connected_device_profiles": [],
+    "exposure_usd": 157.65,
+    "evidence": [
+      {
+        "claim": "Amount is 4.6x the card's median $28.57",
+        "source": "graph",
+        "ref": "query:card_window(card_id=C11923-K2)",
+        "entity_ids": [
+          "3583368"
+        ]
+      },
+      {
+        "claim": "Identity record marks the device New for this account (common in cleared new-phone alerts)",
+        "source": "graph",
+        "ref": "query:card_window(card_id=C11923-K2)",
+        "entity_ids": [
+          "3583368"
+        ]
+      },
+      {
+        "claim": "Match flags consistent",
+        "source": "graph",
+        "ref": "query:card_window(card_id=C11923-K2)",
+        "entity_ids": [
+          "3583368"
+        ]
+      },
+      {
+        "claim": "8 online authorization(s) under $5 within 72 hours (no R5 sequence)",
+        "source": "graph",
+        "ref": "query:card_window(card_id=C11923-K2)",
+        "entity_ids": [
+          "3578277",
+          "3578496",
+          "3578997",
+          "3582142",
+          "3582175",
+          "3582624",
+          "3583866",
+          "3584962"
+        ]
+      },
+      {
+        "claim": "Customer states they did not make the purchase",
+        "source": "customer",
+        "ref": "trigger:customer_report",
+        "entity_ids": [
+          "3583368"
+        ]
+      },
+      {
+        "claim": "Model risk score 0.39 treated as a reason to look, not evidence: in closed cases, cleared alerts cluster at 0.84-0.92",
+        "source": "document",
+        "ref": "README \u00a70; closed_cases_history",
+        "entity_ids": [
+          "3583368"
+        ]
+      },
+      {
+        "claim": "Similar closed cases: CC-0290: Case CC-0290: cardholder C11923 reported unrecognized activity on card C11923-K2; CC-2247: Case CC-2247: cardholder C11923 reported unrecognized activity on card C11923-K2",
+        "source": "graph",
+        "ref": "graphrag.retrieve(case_memory)",
+        "entity_ids": [
+          "CC-0290",
+          "CC-2247",
+          "CC-2673",
+          "CC-4501"
+        ]
+      }
+    ],
+    "similar_prior_cases": [
+      "CC-0290",
+      "CC-2247",
+      "CC-2673",
+      "CC-4501"
+    ],
+    "summary": "Card C11923-K2 was flagged for fraud after customer C11923 reported an unauthorized $131.30 purchase. The transaction was 4.6x the card\u2019s median spend, with 8 small online authorizations under $5 in 72 hours and a new device alert. Similar past cases (CC-0290, CC-2247, CC-2673) confirm recurring fraud patterns on this card. The card was blocked, and no further evidence was requested. Exposure totaled $157.65 across multiple transactions between December 27-29, 2016.",
+    "written_to_graph": false,
+    "graph_case_id": ""
+  },
+  "evidence_requests": [],
+  "next_best_actions": {
+    "initial": [
+      {
+        "action": "BLOCK_CARD",
+        "route": "L1",
+        "reason": "R2: customer denies the transaction; exposure $157.65 <= $2,500"
+      },
+      {
+        "action": "CREATE_CASE",
+        "route": "auto",
+        "reason": "R2: customer dispute"
+      }
+    ],
+    "final": [
+      {
+        "action": "BLOCK_CARD",
+        "route": "L1",
+        "reason": "R2: customer denies the transaction; exposure $157.65 <= $2,500"
+      },
+      {
+        "action": "CREATE_CASE",
+        "route": "auto",
+        "reason": "R2: customer dispute"
+      }
+    ],
+    "what_changed": "nothing"
+  },
+  "sar": {
+    "file": false,
+    "reason": "No report: policy 3a thresholds not met (exposure $157.65 is under $1,000, no shared device, region cluster or coordinated pattern).",
+    "narrative": "",
+    "subjects": [],
+    "total_amount_usd": 0,
+    "activity_dates": []
+  },
+  "stop_reason": "Probability 0.72 with 2 independent item(s): past the 0.85/0.15 threshold with two independent items (policy \u00a76).",
+  "tool_calls": 6,
+  "tokens": 1085,
+  "latency_s": 1.98
+}

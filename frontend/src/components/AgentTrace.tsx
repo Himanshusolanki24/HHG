@@ -3,7 +3,7 @@ import type { CaseView } from '../hooks.ts'
 import { usePolicies } from '../hooks.ts'
 import { useStore } from '../store.ts'
 import type { AgentStep, Claim, Evidence } from '../api/schemas.ts'
-import { routeLabel } from '../derive.ts'
+import { PATTERN_LABEL } from '../derive.ts'
 import { Button, Prov, Skeleton, Tag, cn } from './ui.tsx'
 
 export const TOOL: Record<AgentStep['tool'], string> = {
@@ -96,8 +96,9 @@ function StepBody({ step: s, evidence }: { step: AgentStep; evidence: Record<str
       )}
       {s.recommendation && (
         <div className="rounded-sm border border-line-strong px-2 py-1.5 text-xs">
-          <span className="font-medium">{s.recommendation.action}</span>
-          <span className="text-muted"> via {routeLabel(s.recommendation.route).toLowerCase()}, risk {(s.recommendation.risk * 100).toFixed(0)} ({(s.recommendation.riskLo * 100).toFixed(0)}–{(s.recommendation.riskHi * 100).toFixed(0)}), confidence {(s.recommendation.confidence * 100).toFixed(0)}</span>
+          <span className="font-medium capitalize">{s.recommendation.verdict}</span>
+          <span className="text-muted"> at {(s.recommendation.p * 100).toFixed(0)} ({(s.recommendation.pLo * 100).toFixed(0)}–{(s.recommendation.pHi * 100).toFixed(0)}), {PATTERN_LABEL[s.recommendation.pattern].toLowerCase()}: </span>
+          {s.recommendation.actions.map((a) => `${a.action} (${a.route})`).join(', ')}
         </div>
       )}
     </div>
@@ -119,8 +120,8 @@ export function ClaimLink({ claim, evidence = {} }: { claim: Claim; evidence?: R
   if (kind === 'policy') {
     const p = policies[id]
     return (
-      <Prov source={p ? `${p.doc} §${p.clause} ${p.title}` : id} detail={p?.text}>
-        {claim.text} <span className="font-mono text-2xs text-muted">[{p ? `${p.doc} §${p.clause}` : id}]</span>
+      <Prov source={p ? `${p.doc}, ${p.clause}: ${p.title}` : id} detail={p?.text}>
+        {claim.text} <span className="font-mono text-2xs text-muted">[{p ? p.clause : id}]</span>
       </Prov>
     )
   }

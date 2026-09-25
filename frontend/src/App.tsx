@@ -64,7 +64,7 @@ export default function App() {
           {!c ? (
             <div className="m-auto max-w-sm p-6 text-sm text-muted">
               <p className="text-base text-fg">Open a case to start.</p>
-              <p className="mt-1">Press Enter to open the highlighted case, or click any row. FC-1042 shows a recommendation that changes when new evidence arrives.</p>
+              <p className="mt-1">Press Enter to open the highlighted case, or click any row. HHG-014 is a device shared across 28 cards; HHG-006 splits purchases just under $500.</p>
             </div>
           ) : (
             <Tabs.Root value={tab} onValueChange={(v) => setTab(v as Tab)} className="flex min-h-0 flex-1 flex-col">
@@ -74,7 +74,7 @@ export default function App() {
                     <h1 className="text-base font-semibold">{c.id}</h1>
                     <span className="truncate text-sm">{c.title}</span>
                   </div>
-                  <div className="text-xs text-muted">{TRIGGER[c.trigger]} trigger, {PATTERN[c.pattern].toLowerCase()} pattern{view.inv && `, subject ${view.inv.subjectId}, alert ${view.inv.alertAt.slice(11, 16)} UTC`}</div>
+                  <div className="text-xs text-muted">{TRIGGER[c.trigger]} trigger, {PATTERN[c.pattern].toLowerCase()}{view.inv && `, subject ${view.inv.subjectId}, alert ${view.inv.alertAt.slice(11, 16)} UTC`}</div>
                 </div>
                 <Tabs.List aria-label="Investigation views" className="ml-auto flex shrink-0">
                   {TABS.map(([k, l], i) => (
@@ -99,8 +99,8 @@ export default function App() {
               ) : (
                 <div className="p-6 text-sm text-muted">
                   <Skeleton className="mb-4 h-40 w-full opacity-40" />
-                  <p className="text-fg">No agent run for {c.id} in fixture mode.</p>
-                  <p className="mt-1">Queue data is shown on the right. Open FC-1041, FC-1042 or FC-1043 to see a full investigation, or connect the FastAPI backend with VITE_API_URL.</p>
+                  <p className="text-fg">No agent run for {c.id} yet.</p>
+                  <p className="mt-1">Run <code>python agent.py {c.id}</code> in backend/, then <code>npm run sync</code>, or connect the live API with VITE_API_URL.</p>
                 </div>
               )}
             </Tabs.Root>

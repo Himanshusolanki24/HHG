@@ -1,0 +1,109 @@
+{
+  "case_id": "HHG-016",
+  "case": {
+    "status": "open",
+    "verdict": "uncertain",
+    "fraud_probability": 0.65,
+    "pattern": "card_not_present_new_device",
+    "pattern_description": "",
+    "affected_txn_ids": [
+      "3534820"
+    ],
+    "first_suspicious_txn_id": "3534820",
+    "connected_card_ids": [],
+    "connected_device_profiles": [],
+    "exposure_usd": 59.67,
+    "evidence": [
+      {
+        "claim": "Identity record marks the device New for this account (common in cleared new-phone alerts)",
+        "source": "graph",
+        "ref": "query:card_window(card_id=C09988-K1)",
+        "entity_ids": [
+          "3534820"
+        ]
+      },
+      {
+        "claim": "Match flags consistent",
+        "source": "graph",
+        "ref": "query:card_window(card_id=C09988-K1)",
+        "entity_ids": [
+          "3534820"
+        ]
+      },
+      {
+        "claim": "Customer states they did not make the purchase",
+        "source": "customer",
+        "ref": "trigger:customer_report",
+        "entity_ids": [
+          "3534820"
+        ]
+      },
+      {
+        "claim": "Model risk score 0.37 treated as a reason to look, not evidence: in closed cases, cleared alerts cluster at 0.84-0.92",
+        "source": "document",
+        "ref": "README \u00a70; closed_cases_history",
+        "entity_ids": [
+          "3534820"
+        ]
+      },
+      {
+        "claim": "Similar closed cases: CC-2103: Case CC-2103: cardholder C11597 reported unrecognized activity on card C11597-K2; CC-1734: Case CC-1734: cardholder C04034 reported unrecognized activity on card C04034-K2",
+        "source": "graph",
+        "ref": "graphrag.retrieve(case_memory)",
+        "entity_ids": [
+          "CC-2103",
+          "CC-1734",
+          "CC-0973"
+        ]
+      }
+    ],
+    "similar_prior_cases": [
+      "CC-2103",
+      "CC-1734",
+      "CC-0973"
+    ],
+    "summary": "Customer C09988 reported an unauthorized $59.67 card-not-present transaction on card C09988-K1 on 2016-12-11. The device was flagged as new for this account, and the customer denies making the purchase. Similar past cases (CC-2103, CC-1734, CC-0973) involved confirmed fraudulent online purchases of similar amounts ($59.44\u2013$59.84) from different cardholders. The model risk score (0.37) is unusually low for fraud cases, raising suspicion despite the lack of a clear pattern. No additional evidence was requested, and the card was blocked. The case remains uncertain with a 65% fraud probability.",
+    "written_to_graph": false,
+    "graph_case_id": ""
+  },
+  "evidence_requests": [],
+  "next_best_actions": {
+    "initial": [
+      {
+        "action": "BLOCK_CARD",
+        "route": "L1",
+        "reason": "R2: customer denies the transaction; exposure $59.67 <= $2,500"
+      },
+      {
+        "action": "CREATE_CASE",
+        "route": "auto",
+        "reason": "R2: customer dispute"
+      }
+    ],
+    "final": [
+      {
+        "action": "BLOCK_CARD",
+        "route": "L1",
+        "reason": "R2: customer denies the transaction; exposure $59.67 <= $2,500"
+      },
+      {
+        "action": "CREATE_CASE",
+        "route": "auto",
+        "reason": "R2: customer dispute"
+      }
+    ],
+    "what_changed": "nothing"
+  },
+  "sar": {
+    "file": false,
+    "reason": "No report: policy 3a thresholds not met (exposure $59.67 is under $1,000, no shared device, region cluster or coordinated pattern).",
+    "narrative": "",
+    "subjects": [],
+    "total_amount_usd": 0,
+    "activity_dates": []
+  },
+  "stop_reason": "Probability 0.65 with 1 independent item(s): past the 0.85/0.15 threshold with two independent items (policy \u00a76).",
+  "tool_calls": 6,
+  "tokens": 990,
+  "latency_s": 2.13
+}

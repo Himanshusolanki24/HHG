@@ -1,0 +1,39 @@
+{
+  "n": {
+    "fraud": 4665,
+    "cleared": 900
+  },
+  "lr": {
+    "amount": {
+      "0.5-2x": 1.109,
+      "2-5x": 1.707,
+      "<0.5x": 0.706,
+      ">=5x": 0.47,
+      "no_history": 0.941
+    },
+    "risk_high": {
+      "False": 770.768,
+      "True": 0.146
+    },
+    "device": {
+      "found_device": 21.453,
+      "in_person": 2.908,
+      "new_device": 0.218,
+      "no_identity": 17.426
+    },
+    "match_anomaly": {
+      "False": 0.661,
+      "True": 3.953
+    },
+    "region": {
+      "away_from_home": 1.854,
+      "home_region": 6.202,
+      "online": 0.657
+    },
+    "recurring_monthly": {
+      "False": 0.998,
+      "True": 2.706
+    }
+  },
+  "pattern_accuracy": 0.862
+}

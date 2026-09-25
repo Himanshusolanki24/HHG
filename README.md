@@ -1,50 +1,27 @@
-# HHG: agentic fraud investigation
+# HHG: agentic fraud investigation on TigerGraph
 
-An AI agent investigates fraud cases on a TigerGraph fraud graph, and an analyst console shows its evidence, uncertainty and recommendations.
+An agent investigates card-fraud alerts on the IEEE-CIS dataset (TigerGraph × Hacker House Goa). It decides under the bank's policy,
+asks for evidence when uncertain, shows how its recommendation changed, and writes each case back to the graph. An analyst console shows the whole run.
 
-| Folder | What it is | Details |
-|---|---|---|
-| [`frontend/`](frontend/README.md) | Analyst console: case queue, graph, timeline, agent trace, decision panel. React, TypeScript, Vite. | Run instructions, API contract, 90-second demo script |
-| [`backend/`](backend/README.md) | Investigation agent: LangGraph state machine, GraphRAG, policy engine, FastAPI with SSE. Python 3.11+. | Setup, schema install, data loading, batch run, tests |
+| Folder | What |
+|---|---|
+| [`cases/`](cases) | **The submission**: 20 answer files in the README format, validated by `backend/validate.py` |
+| [`backend/`](backend/README.md) | The agent: graph evidence, case memory, calibrated scoring, policy engine, Mistral writing, TigerGraph store, FastAPI + SSE |
+| [`frontend/`](frontend/README.md) | The console: case queue, graph, timeline, streaming agent trace, answer file, decision panel with before/after |
 
 ## Quick start
 
-Console only, on fixture data (no backend needed):
-
 ```bash
-cd frontend
-npm install
-npm run dev        # http://localhost:5173
+# 1. agent (needs the dataset folder; set DATA_DIR in backend/.env)
+cd backend && python3.14 -m venv .venv && .venv/bin/pip install -e . && cp .env.example .env
+.venv/bin/python calibrate.py && .venv/bin/python agent.py && .venv/bin/python validate.py
+
+# 2. console on the agent's output (no server needed)
+cd ../frontend && npm install && npm run sync && npm run dev      # http://localhost:5173
+
+# 3. or live: the console streams a fresh agent run for each case
+cd ../backend && .venv/bin/uvicorn api:app --port 8000
+cd ../frontend && VITE_API_URL=http://localhost:8000 npm run dev
 ```
 
-Backend in dry-run mode (no TigerGraph or LLM):
-
-```bash
-cd backend
-python3 -m venv .venv && source .venv/bin/activate
-pip install -e .
-DRY_RUN=true python -m api.main     # http://localhost:8000
-```
-
-For a live run, put Savanna and OpenAI credentials in `backend/.env`. The variable names are listed in `backend/README.md`. `.env` is gitignored, so never commit it.
-
-## Connecting the two
-
-Point the console at the backend with:
-
-```bash
-cd frontend
-VITE_API_URL=http://localhost:8000 npm run dev
-```
-
-**The two APIs do not match yet.** The console expects the routes in `frontend/README.md`, but the backend currently exposes a different set:
-
-| Console expects | Backend has |
-|---|---|
-| `GET /cases` | `GET /cases` |
-| `GET /cases/{id}/stream` (SSE, `step` / `done` events) | `GET /cases/{id}/stream` |
-| `GET /cases/{id}/investigation` | `GET /cases/{id}` and `GET /cases/{id}/graph` |
-| `GET /policies` | none |
-| `POST /cases/{id}/actions` | `POST /cases/{id}/act` |
-
-Close the gap on one side before a live demo: add the routes to FastAPI, or adapt `httpApi` in `frontend/src/api/client.ts`. Until then, the console's fixture mode is the reliable demo path.
+`backend/.env` holds the Savanna and Mistral credentials. It is gitignored; `backend/.env.example` lists the keys.

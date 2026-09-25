@@ -1,0 +1,157 @@
+{
+  "case_id": "HHG-006",
+  "case": {
+    "status": "escalated",
+    "verdict": "fraud",
+    "fraud_probability": 0.97,
+    "pattern": "undocumented",
+    "pattern_description": "This is an undocumented pattern where fraudsters execute four rapid, high-value transactions just under a $500 authorization threshold within an hour, likely to test card validity without triggering fraud alerts. It affects cardholders with active online payment capabilities and was identified through cross-referencing multiple cases with identical transaction behaviors and customer denials. The pattern exploits authorization limits to evade detection while maximizing potential exposure.",
+    "affected_txn_ids": [
+      "3476602",
+      "3476633",
+      "3476665",
+      "3476682"
+    ],
+    "first_suspicious_txn_id": "3476602",
+    "connected_card_ids": [],
+    "connected_device_profiles": [],
+    "exposure_usd": 1906.07,
+    "evidence": [
+      {
+        "claim": "Amount is 7.7x the card's median $62.93",
+        "source": "graph",
+        "ref": "query:card_window(card_id=C07297-K1)",
+        "entity_ids": [
+          "3476682"
+        ]
+      },
+      {
+        "claim": "Identity record marks the device New for this account (common in cleared new-phone alerts)",
+        "source": "graph",
+        "ref": "query:card_window(card_id=C07297-K1)",
+        "entity_ids": [
+          "3476682"
+        ]
+      },
+      {
+        "claim": "Match flags consistent",
+        "source": "graph",
+        "ref": "query:card_window(card_id=C07297-K1)",
+        "entity_ids": [
+          "3476682"
+        ]
+      },
+      {
+        "claim": "4 online purchases between $400 and $500 within an hour, amounts kept under a $500 threshold (as in closed cases CC-3748, CC-3841)",
+        "source": "graph",
+        "ref": "query:card_window(card_id=C07297-K1)",
+        "entity_ids": [
+          "3476602",
+          "3476633",
+          "3476665",
+          "3476682"
+        ]
+      },
+      {
+        "claim": "Customer states they did not make the purchase",
+        "source": "customer",
+        "ref": "trigger:customer_report",
+        "entity_ids": [
+          "3476682"
+        ]
+      },
+      {
+        "claim": "Model risk score 0.25 treated as a reason to look, not evidence: in closed cases, cleared alerts cluster at 0.84-0.92",
+        "source": "document",
+        "ref": "README \u00a70; closed_cases_history",
+        "entity_ids": [
+          "3476682"
+        ]
+      },
+      {
+        "claim": "Similar closed cases: CC-3748: Case CC-3748: cardholder C12267 reported four online purchases within forty minu; CC-3841: Case CC-3841: cardholder C01099 reported four online purchases within forty minu",
+        "source": "graph",
+        "ref": "graphrag.retrieve(case_memory)",
+        "entity_ids": [
+          "CC-3748",
+          "CC-3841",
+          "CC-4124"
+        ]
+      }
+    ],
+    "similar_prior_cases": [
+      "CC-3748",
+      "CC-3841",
+      "CC-4124"
+    ],
+    "summary": "Customer C07297 reported a $482.12 unauthorized purchase on card C07297-K1, flagged by a 7.7x median spend anomaly and device behavior. Four transactions under $500 occurred within an hour, matching a new undocumented pattern. The customer denied all transactions, and the device was marked as new for the account. Similar cases (CC-3748, CC-3841, CC-4124) show a repeated tactic of clustering purchases under $500 to avoid authorization thresholds. Card blocked, case created, report filed, and escalated to analyst. Exposure totals $1,906.07 across four transactions.",
+    "written_to_graph": false,
+    "graph_case_id": ""
+  },
+  "evidence_requests": [],
+  "next_best_actions": {
+    "initial": [
+      {
+        "action": "BLOCK_CARD",
+        "route": "L1",
+        "reason": "R2: customer denies the transaction; exposure $1,906.07 <= $2,500"
+      },
+      {
+        "action": "CREATE_CASE",
+        "route": "auto",
+        "reason": "R2: customer dispute"
+      },
+      {
+        "action": "FILE_REPORT",
+        "route": "L2",
+        "reason": "R2: exposure over $1,000"
+      },
+      {
+        "action": "ESCALATE_TO_ANALYST",
+        "route": "auto",
+        "reason": "R9: pattern fits no documented typology"
+      }
+    ],
+    "final": [
+      {
+        "action": "BLOCK_CARD",
+        "route": "L1",
+        "reason": "R2: customer denies the transaction; exposure $1,906.07 <= $2,500"
+      },
+      {
+        "action": "CREATE_CASE",
+        "route": "auto",
+        "reason": "R2: customer dispute"
+      },
+      {
+        "action": "FILE_REPORT",
+        "route": "L2",
+        "reason": "R2: exposure over $1,000"
+      },
+      {
+        "action": "ESCALATE_TO_ANALYST",
+        "route": "auto",
+        "reason": "R9: pattern fits no documented typology"
+      }
+    ],
+    "what_changed": "nothing"
+  },
+  "sar": {
+    "file": true,
+    "reason": "R2: exposure over $1,000",
+    "narrative": "Customer C07297 reported an unauthorized transaction of $482.12 on their card C07297-K1 on 2016-11-21, stating they never made the purchase. The transaction amount is 7.7 times the card\u2019s median spending of $62.93, triggering immediate suspicion. The device used for the transaction was marked as new for this account, a common indicator in cleared fraud cases involving new phone alerts. Within the same hour, three additional transactions of similar amounts\u2014$400 to $500\u2014were detected, all just under the $500 authorization threshold. This clustering of transactions under a specific limit mirrors previously closed cases (CC-3748, CC-3841, CC-4124), where cardholders reported identical patterns of unauthorized purchases. The customer\u2019s denial, combined with the transactional anomalies and historical precedent, strongly suggests fraudulent activity. The model risk score of 0.25, while low, was treated as a reason to investigate further, as cleared alerts in past cases typically clustered between 0.84 and 0.92. The rapid succession of transactions and the deliberate amount selection indicate a coordinated attempt to exploit authorization thresholds, warranting a Suspicious Activity Report.",
+    "subjects": [
+      "C07297",
+      "C07297-K1"
+    ],
+    "total_amount_usd": 1906.07,
+    "activity_dates": [
+      "2016-11-21",
+      "2016-11-21"
+    ]
+  },
+  "stop_reason": "Probability 0.97 with 2 independent item(s): past the 0.85/0.15 threshold with two independent items (policy \u00a76).",
+  "tool_calls": 6,
+  "tokens": 2726,
+  "latency_s": 70.15
+}

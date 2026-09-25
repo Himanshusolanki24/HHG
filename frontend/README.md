@@ -1,73 +1,47 @@
 # Case Desk: fraud investigation console
 
-Analyst console for a TigerGraph-backed fraud agent. Three panes: case queue, investigation canvas (graph, timeline, agent trace, case record) and the decision panel. By default it runs entirely on fixture JSON. Nothing else is needed.
+Analyst console for the HHG fraud agent. Three panes: case queue, investigation canvas (graph, timeline, agent trace, answer file)
+and the decision panel. By default it shows the agent's real runs (`src/fixtures/`, copied from `backend/runs/` by `npm run sync`).
 
 ## Run
 
 ```bash
-cd frontend
 npm install
-npm run dev          # http://localhost:5173 (mock adapter, no backend)
-npm run check        # validates every fixture against the zod schemas + asserts decision logic
+npm run sync         # copy the latest agent output from ../backend/runs
+npm run dev          # http://localhost:5173, component library at /kitchen-sink
+npm run check        # runs validate against the zod schemas; trace and answer file agree
 npm run build
 ```
 
-Component library: `http://localhost:5173/kitchen-sink`
-
-### Real backend
+Live mode streams a fresh agent run per case over SSE:
 
 ```bash
-VITE_API_URL=http://localhost:8000 npm run dev
+VITE_API_URL=http://localhost:8000 npm run dev   # with `uvicorn api:app --port 8000` running in ../backend
 ```
-
-The FastAPI contract (all responses are zod-validated in `src/api/client.ts`):
 
 | Method | Path | Returns |
 |---|---|---|
-| GET | `/cases` | `Case[]` |
-| GET | `/policies` | `Policy[]` |
-| GET | `/cases/{id}/investigation` | `Investigation` without `steps` (404 = no run) |
-| GET (SSE) | `/cases/{id}/stream` | `event: step` with an `AgentStep`, then `event: done` |
-| POST | `/cases/{id}/actions` `{actionId, label}` | `AuditEntry` |
-
-## Layout
-
-```
-src/api/schemas.ts     zod: Case, Policy, GraphNode/Edge, Evidence, Claim, AgentStep, Recommendation, Investigation, AuditEntry
-src/api/client.ts      Api interface + HTTP/SSE adapter; picks mock when VITE_API_URL is unset
-src/api/mock.ts        fixture adapter with paced streaming and a "fail next action" knob
-src/fixtures/          20 queue cases, 10 policy clauses, 3 full investigations
-src/derive.ts          pure logic: replay window, current/prior recommendation, diff, evidence path, case record
-src/store.ts           Zustand: selection, streamed runs, replay cursor, audit trail, theme
-src/components/        CaseQueue, GraphView, Timeline, AgentTrace, CaseRecord, DecisionPanel, ReplayBar, ui (shadcn-style)
-```
-
-Every pane is derived from one replay cursor over the streamed steps. Scrub it and the graph highlight, timeline markers, trace, risk gauge and before/after comparison all rewind together.
-
-## Fixture investigations
-
-- **FC-1041 card testing.** Same action, but the route moves from analyst approval to auto-execute once policy CARD-2.1 §3 is confirmed. The risk band narrows.
-- **FC-1042 mule network. The recommendation flips.** It starts as "step-up auth and monitor" (risk 52, wide band, confidence 48). Device telemetry arrives after an 18-minute wait and shows device 7F3A is shared with two accounts from CASE-0877, a confirmed mule ring. The recommendation becomes "freeze account and file SAR" with dual approval (risk 89, confidence 86), and the freeze action unlocks.
-- **FC-1043 APP scam.** The customer's report triggers a recall. The beneficiary bank confirms the funds are still there, which adds a beneficiary hold.
-
-The other 17 queue cases have queue data only.
+| GET | `/cases` | Queue rows (`Case[]`) |
+| GET | `/policies` | Policy rules R1–R10, 3a, §6 |
+| GET | `/cases/{id}/investigation` | Graph, transactions, similar cases, answer file |
+| GET (SSE) | `/cases/{id}/stream` | Re-runs the agent: `event: step` per step, then `event: done` |
+| POST | `/cases/{id}/actions` `{actionId,label}` | Audit entry. Only `auto` actions run; L1/L2 return 403 naming the approver |
 
 ## Keyboard
 
-`j` / `k` move in the queue, `Enter` opens. `1`–`4` switch tabs. In the graph, arrow keys move between entities and `Esc` clears. Every number with a dotted underline can take focus and shows its source.
+`j` / `k` move in the queue, `Enter` opens. `1`–`4` switch tabs. In the graph, arrow keys move between entities and `Esc` clears.
+Every dotted-underlined number or claim takes focus and shows its source.
 
 ## 90-second demo script
 
 | Time | Do | Say |
 |---|---|---|
-| 0:00 | Page loaded, queue on the left. Press `j` then `Enter` on **FC-1042**. | "20 benchmark cases. This one was raised by an analyst: six transfers in, then a crypto cash-out." |
-| 0:10 | Watch the trace stream on the **Agent trace** tab (`3`). | "Each step is a GSQL query, GraphRAG retrieval or policy lookup, with its latency and token cost. Skeletons mark what's still coming." |
-| 0:20 | Point at the decision panel as the first recommendation lands. | "Step-up auth and monitor. Risk 52, but look at the hatched band, 31 to 74, and confidence 48. The agent is saying it doesn't know yet." |
-| 0:28 | Point at **What is still unknown**. | "It ranks what it doesn't know by expected information gain. The device question is worth 0.62 bits, so it asks the mobile risk SDK." |
-| 0:35 | Hover the disabled **Freeze account** button. | "Freeze is blocked, and the tooltip names the clause: ACC-1.4 §3." |
-| 0:42 | Evidence arrives and the panel animates. | "The telemetry comes back. The device is bound to two accounts from a confirmed mule ring. Watch the old recommendation move aside, the new one slide in, and the diff show what changed and which evidence caused it." |
-| 0:55 | Click **Show in graph** under *Caused by*, then toggle **Show evidence path only**. | "Here's the exact subgraph the agent relied on: subject, device, the linked accounts, CASE-0877. Everything else is dimmed." |
-| 1:05 | Click **Replay investigation** and drag the scrubber back to step 6. | "Replay rewinds every pane together: graph, timeline, gauge and recommendation." |
-| 1:15 | Click **Jump to latest**, then **Freeze account** and confirm. | "Freeze is unlocked now. Confirming writes to the audit trail right away and closes the case in the queue." |
-| 1:22 | Tick **Fail next action**, run **Require step-up auth**. | "If the write fails, the UI rolls back and says why." |
-| 1:28 | Tab `4`, **Copy JSON**. | "And this is the case record written back to TigerGraph." |
+| 0:00 | Queue visible. Click **HHG-014**. | "20 exam cases. This one came from an analyst: several cards this month used the same unusual device." |
+| 0:08 | Watch the trace stream (tab `3`). | "Each step is a graph query or retrieval, with latency and token cost. It pulls the card, the 48-hour window, then walks the device to its other cards." |
+| 0:20 | Tab `1`, Graph. | "One Samsung profile, always behind an anonymous proxy, used on 27 other cards in 30 days. The agent also found three closed cases from an August ring with the same profile." |
+| 0:32 | Point at **Before evidence**. | "Probability 0.82, but blocking needs the cardholder's denial under R2, so it verifies first, opens a case, flags the report and monitors the 27 cards." |
+| 0:42 | The reply lands; before/after animates. | "The simulated reply is a denial. Probability rises to 0.98 and BLOCK_CARD is added at L1. The diff shows exactly what changed and which evidence caused it." |
+| 0:55 | Hover the disabled **BLOCK_CARD L1** button. | "The agent may only run auto actions. The block waits for a team lead, per policy §2." |
+| 1:02 | Click **HHG-010**. | "Contrast: a $1,000 online purchase scored 0.90 by the bank model. The agent says 8%: new device, high score, and its case memory shows cleared new-phone and travel alerts just like it. It closes without bothering the customer." |
+| 1:15 | Tab `4`, **Download**. | "This is the answer file we submit: evidence with sources, both recommendations, the report, and the stop reason." |
+| 1:25 | Click **Replay investigation**. | "Replay rewinds every pane together for review." |

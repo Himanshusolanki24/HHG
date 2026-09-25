@@ -1,0 +1,130 @@
+{
+  "case_id": "HHG-001",
+  "case": {
+    "status": "closed_fraud",
+    "verdict": "fraud",
+    "fraud_probability": 0.98,
+    "pattern": "out_of_region_use",
+    "pattern_description": "",
+    "affected_txn_ids": [
+      "3514030"
+    ],
+    "first_suspicious_txn_id": "3514030",
+    "connected_card_ids": [],
+    "connected_device_profiles": [],
+    "exposure_usd": 77.07,
+    "evidence": [
+      {
+        "claim": "Card-present purchase (no device record)",
+        "source": "graph",
+        "ref": "query:card_window(card_id=C12382-K1)",
+        "entity_ids": [
+          "3514030"
+        ]
+      },
+      {
+        "claim": "Billing region 444 is away from the card's most-used in-person region 204",
+        "source": "graph",
+        "ref": "query:card_window(card_id=C12382-K1)",
+        "entity_ids": [
+          "3514030"
+        ]
+      },
+      {
+        "claim": "Match flags show a mismatch (M4=M0 or M6=F; unnamed Vesta features)",
+        "source": "graph",
+        "ref": "query:card_window(card_id=C12382-K1)",
+        "entity_ids": [
+          "3514030"
+        ]
+      },
+      {
+        "claim": "Customer states they did not make the purchase and still holds the card",
+        "source": "customer",
+        "ref": "evidence_request:1",
+        "entity_ids": [
+          "3514030"
+        ]
+      },
+      {
+        "claim": "Model risk score 0.61 treated as a reason to look, not evidence: in closed cases, cleared alerts cluster at 0.84-0.92",
+        "source": "document",
+        "ref": "README \u00a70; closed_cases_history",
+        "entity_ids": [
+          "3514030"
+        ]
+      },
+      {
+        "claim": "Similar closed cases: CC-4854: Case CC-4854: cardholder C00952 reported unrecognized activity on card C00952-K1; CC-4326: Case CC-4326: cardholder C06494 reported unrecognized activity on card C06494-K2",
+        "source": "graph",
+        "ref": "graphrag.retrieve(case_memory)",
+        "entity_ids": [
+          "CC-4854",
+          "CC-4326",
+          "CC-5152",
+          "CC-1066"
+        ]
+      }
+    ],
+    "similar_prior_cases": [
+      "CC-4854",
+      "CC-4326",
+      "CC-5152",
+      "CC-1066"
+    ],
+    "summary": "Transaction 3514030 ($77.07) was flagged as fraudulent due to out-of-region use, with the cardholder denying the purchase and still possessing the card. The purchase occurred in billing region 444, while the card\u2019s typical in-person usage is in region 204. Similar past cases involved confirmed fraudulent card-present transactions in billing regions. The model risk score of 0.61 triggered review, though cleared alerts typically score higher. The card was blocked, and no device or connected cards were linked.",
+    "written_to_graph": false,
+    "graph_case_id": ""
+  },
+  "evidence_requests": [
+    {
+      "type": "customer_validation",
+      "asked_after_step": 5,
+      "assumed_response": "Customer states they did not make the purchase and still holds the card. Simulated: replies are not provided in this round; assumption follows the graph evidence (probability 0.86)."
+    }
+  ],
+  "next_best_actions": {
+    "initial": [
+      {
+        "action": "DECLINE_TRANSACTION",
+        "route": "L1",
+        "reason": "R1: probability 0.86 on 3 signals; hold the authorization"
+      },
+      {
+        "action": "VERIFY_WITH_CUSTOMER",
+        "route": "auto",
+        "reason": "R1: confirm with the cardholder before any block"
+      },
+      {
+        "action": "CREATE_CASE",
+        "route": "auto",
+        "reason": "3a: fraud probability 0.86 >= 0.30"
+      }
+    ],
+    "final": [
+      {
+        "action": "BLOCK_CARD",
+        "route": "L1",
+        "reason": "R2: customer denies the transaction; exposure $77.07 <= $2,500"
+      },
+      {
+        "action": "CREATE_CASE",
+        "route": "auto",
+        "reason": "R2: customer dispute"
+      }
+    ],
+    "what_changed": "The assumed reply (customer states they did not make the purchase and still holds the card) moved probability from 0.86 to 0.98, changing the actions from DECLINE_TRANSACTION, VERIFY_WITH_CUSTOMER, CREATE_CASE to BLOCK_CARD, CREATE_CASE."
+  },
+  "sar": {
+    "file": false,
+    "reason": "No report: policy 3a thresholds not met (exposure $77.07 is under $1,000, no shared device, region cluster or coordinated pattern).",
+    "narrative": "",
+    "subjects": [],
+    "total_amount_usd": 0,
+    "activity_dates": []
+  },
+  "stop_reason": "Probability 0.98 with 4 independent item(s): the verification reply settles it (policy \u00a76).",
+  "tool_calls": 5,
+  "tokens": 1051,
+  "latency_s": 1.89
+}

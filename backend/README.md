@@ -1,130 +1,45 @@
-# Agentic Fraud Investigation Backend
+# Fraud investigation agent
 
-Backend system for agentic fraud investigation on TigerGraph Savanna.
+Investigates the 20 HHG cases on the real dataset. For each case it writes a README-format answer file to
+`../cases/` and a UI trace to `runs/`.
 
-## Prerequisites
-
-- Python 3.11+
-- TigerGraph Savanna instance (cloud)
-- OpenAI API key
-
-## Setup
+## Run
 
 ```bash
-# Create virtual environment
-python3 -m venv .venv
-source .venv/bin/activate
-
-# Install dependencies
-pip install -e .
-
-# Configure environment
-cp .env.example .env
-# Edit .env with your Savanna credentials and LLM key
+python3.14 -m venv .venv && .venv/bin/pip install -e .
+cp .env.example .env          # set DATA_DIR; add MISTRAL_API_KEY and Savanna details when you have them
+.venv/bin/python calibrate.py # learn evidence weights from the 5,565 closed cases -> lr.json (about 90 s)
+.venv/bin/python agent.py     # all 20 cases -> ../cases/*.json, runs/*.json   (or: agent.py HHG-014)
+.venv/bin/python validate.py  # README answer-format + policy checks, must say 20/20 valid
+.venv/bin/python test_policy.py
+.venv/bin/uvicorn api:app --port 8000   # the console's live API (SSE step stream)
 ```
 
-## TigerGraph Savanna Connection
+The first run builds `.cache/tx.parquet` from the 708 MB CSV, which takes about a minute.
 
-Set in `.env`:
-- `SAVANNA_HOST` - Your Savanna instance URL
-- `SAVANNA_USERNAME` - TigerGraph username
-- `SAVANNA_PASSWORD` - TigerGraph password
-- `SAVANNA_GRAPH` - Graph name (default: FraudGraph)
-- `LLM_API_KEY` - OpenAI API key
-- `DRY_RUN` - Set to `true` to run without database
+## How a case is investigated
 
-## Schema Installation
+| Step | Code | What it does |
+|---|---|---|
+| Graph evidence | `signals.py` via `data.Store` / `tg.TigerStore` | Card history, ±48 h window, R5 card-testing sequence, sub-$500 splits, device ring traversal, region vs home region |
+| Case memory | `agent.similar_cases` | Closed cases on the same card or shared device, same-typology exemplars, and cases closed earlier in this run |
+| Weigh | `lr.json` from `calibrate.py` | Likelihood ratios learned from the closed cases (naive Bayes, tempered ×0.6, capped at 8) |
+| Decide | `policy.py` | Rules R1–R10, auto/L1/L2 routes, the case-vs-report rule (3a) and the stopping rule (§6), all in code. The LLM never picks actions. |
+| Ask | `agent.investigate` | Picks the permitted request with the highest expected information gain, simulates the reply from the evidence, and recommends again |
+| Write | `llm.py` (Mistral, JSON mode) | Summary, report narrative, pattern description. Uses only the facts given; falls back to templates without a key |
+| Record | `tg.TigerStore.write_case` | `InvestigationCase` vertex with edges to the card, affected transactions, similar cases and connected cards |
 
-```bash
-# Install graph schema on TigerGraph
-python -m graph.loader --install-schema schema.gsql
-```
+## What the data taught us (measured on closed cases)
 
-## Data Loading
+- **Card IDs** are not in `transactions.csv`. They are the customer ID plus the rank of the customer's distinct (card4, card6) pairs, with blanks sorted first. This matches 100% of 14,955 closed-case transactions.
+- **Pattern rules reproduce the analysts' labels 86.2% of the time** (4,021 / 4,665 confirmed cases).
+- **Model score:** every cleared alert scored 0.84–0.92. A high score may only lower the probability, never raise it.
+- **New device:** 83% of cleared alerts came from a new device ("customer bought a new phone"), so a new device alone lowers the probability.
+- **Device ring:** a real ring is a specific device profile that only ever appears behind one proxy type. The SM-G935F ring is 100% anonymous-proxy across 52 cards; popular profiles such as Windows 10 / Chrome 65 are not rings.
+- **Big card buckets:** some cards have 10,000+ transactions (the dataset's customer is an issuer bucket). Counts of same-amount charges and tiny authorizations are confounded by this, so they are not weighted. Recurring charges must repeat at monthly gaps to count for R7.
 
-```bash
-# Load ~590k transactions, device/connection records, closed cases, policies, patterns
-python -m graph.loader
-```
+## TigerGraph
 
-The loader is idempotent and resumable. Progress is logged.
-
-## Running Batch Investigation
-
-```bash
-# Generate all 20 answer files
-python batch.py
-
-# Output goes to /tmp/fraud_answers/
-```
-
-## Running the API Server
-
-```bash
-# Start FastAPI server
-python -m api.main
-
-# Server runs on http://localhost:8000
-```
-
-## Running Tests
-
-```bash
-# Run all tests
-pytest tests/ -v
-
-# Run specific test files
-pytest tests/test_policy.py -v
-pytest tests/test_stopping_rule.py -v
-pytest tests/test_full_investigation.py -v
-```
-
-## Dry Run Mode
-
-```bash
-# Run everything without TigerGraph or LLM
-DRY_RUN=true python batch.py
-DRY_RUN=true python -m api.main
-```
-
-## API Endpoints
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | /cases | List all cases |
-| POST | /investigate/{case_id} | Start/resume investigation |
-| GET | /cases/{case_id}/stream | SSE stream of agent steps |
-| GET | /cases/{case_id} | Full case record |
-| GET | /cases/{case_id}/graph | Evidence subgraph |
-| POST | /cases/{case_id}/evidence | Inject evidence |
-| POST | /cases/{case_id}/act | Execute action |
-| GET | /cases/{case_id}/export | Export answer file |
-
-## Architecture
-
-1. **Graph Layer** (schema.gsql, loader.py): TigerGraph graph schema and bulk loader
-2. **GraphRAG** (retrieval.py): Grounded evidence retrieval via vector search
-3. **Policy Engine** (policy/engine.py): Deterministic policy authorization
-4. **Agent** (agent/state_machine.py): LangGraph state machine for investigation
-5. **Memory** (memory.py): Case persistence and similar case retrieval
-6. **API** (api/main.py): FastAPI surface with SSE streaming
-
-## Output Contract
-
-Each answer file contains:
-- Case record with investigation trail
-- Evidence items with source references
-- Findings, decisions, actions
-- Recommendation with risk assessment
-- Approval route recorded before and after evidence
-- SAR (where policy requires it)
-- Next best action with approval route recorded twice
-
-## Evaluation Criteria
-
-- Investigation accuracy (25%)
-- Next best action under uncertainty (25%)
-- Agentic design (15%)
-- Innovation (15%)
-- Case summary + explainability (10%)
-- Demo (10%)
+`python tg.py setup` creates the schema (`gsql/schema.gsql`), bulk-loads in 50k-row chunks (`gsql/load.gsql`) and installs the queries
+(`gsql/queries.gsql`: `card_txns`, `device_txns`, `txn_cases`, `prior_investigations`). Once `SAVANNA_HOST` resolves, `data.store()` switches
+to TigerGraph automatically, and answer files record `written_to_graph: true` with the `graph_case_id`.

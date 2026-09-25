@@ -5,7 +5,7 @@ import { useStore } from '../store.ts'
 import type { AgentStep } from '../api/schemas.ts'
 import { Skeleton, cn } from './ui.tsx'
 
-const fmtTime = (t: number) => new Date(t).toISOString().slice(11, 16)
+const fmtTime = (t: number) => new Date(t).toISOString().slice(5, 16).replace('T', ' ')
 const fmtAmt = (n: number) => `$${n.toLocaleString('en-US', { maximumFractionDigits: 2 })}`
 const LANE: Record<AgentStep['tool'], number> = {
   gsql: 3, graphrag: 3, policy_lookup: 3, recommend: 2, evidence_request: 1, evidence_response: 1,
@@ -47,9 +47,11 @@ export function Timeline({ view }: { view: CaseView }) {
 
   const inDomain = (p: Pt) => p.x >= data.domain[0] && p.x <= data.domain[1]
   const onPick = (p: unknown) => { const id = (p as { payload?: Pt }).payload?.stepId; if (id) showStep(id) }
+  // Explicit, evenly spaced ticks: auto "nice" ticks collide (duplicate keys) when the window is only minutes wide.
+  const ticks = Array.from({ length: 7 }, (_, i) => Math.round(data.domain[0] + ((data.domain[1] - data.domain[0]) * i) / 6))
   const xAxis = (hide: boolean) => (
     <XAxis type="number" dataKey="x" domain={data.domain} scale="time" tickFormatter={fmtTime} hide={hide} allowDataOverflow
-      stroke="var(--line-strong)" tick={{ fill: 'var(--muted)', fontSize: 11 }} tickCount={8} />
+      stroke="var(--line-strong)" tick={{ fill: 'var(--muted)', fontSize: 11 }} ticks={ticks} />
   )
   const alertLine = <ReferenceLine x={data.alert} stroke="var(--risk-high)" strokeDasharray="3 3" label={{ value: 'Alert', position: 'insideTopRight', fill: 'var(--risk-high)', fontSize: 11 }} />
 

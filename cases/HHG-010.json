@@ -1,0 +1,117 @@
+{
+  "case_id": "HHG-010",
+  "case": {
+    "status": "closed_legitimate",
+    "verdict": "legitimate",
+    "fraud_probability": 0.08,
+    "pattern": "none",
+    "pattern_description": "",
+    "affected_txn_ids": [],
+    "first_suspicious_txn_id": "",
+    "connected_card_ids": [],
+    "connected_device_profiles": [],
+    "exposure_usd": 0.0,
+    "evidence": [
+      {
+        "claim": "Amount is 14.5x the card's median $68.98",
+        "source": "graph",
+        "ref": "query:card_window(card_id=C10434-K1)",
+        "entity_ids": [
+          "3506725"
+        ]
+      },
+      {
+        "claim": "Identity record marks the device New for this account (common in cleared new-phone alerts)",
+        "source": "graph",
+        "ref": "query:card_window(card_id=C10434-K1)",
+        "entity_ids": [
+          "3506725"
+        ]
+      },
+      {
+        "claim": "Match flags consistent",
+        "source": "graph",
+        "ref": "query:card_window(card_id=C10434-K1)",
+        "entity_ids": [
+          "3506725"
+        ]
+      },
+      {
+        "claim": "Model score 0.90 is in the band where most alerts are legitimate (README; cleared closed cases cluster at 0.84-0.92)",
+        "source": "graph",
+        "ref": "query:card_window(card_id=C10434-K1)",
+        "entity_ids": [
+          "3506725"
+        ]
+      },
+      {
+        "claim": "Model risk score 0.90 treated as a reason to look, not evidence: in closed cases, cleared alerts cluster at 0.84-0.92",
+        "source": "document",
+        "ref": "README \u00a70; closed_cases_history",
+        "entity_ids": [
+          "3506725"
+        ]
+      },
+      {
+        "claim": "Similar closed cases: CC-0873: Case CC-0873: model scored a $50.05 transaction at 0.93. Cardholder confirmed tr; CC-0009: Case CC-0009: model scored a $149.98 transaction at 0.84. Cardholder confirmed t",
+        "source": "graph",
+        "ref": "graphrag.retrieve(case_memory)",
+        "entity_ids": [
+          "CC-0873",
+          "CC-0009",
+          "CC-0010",
+          "CC-0015"
+        ]
+      }
+    ],
+    "similar_prior_cases": [
+      "CC-0873",
+      "CC-0009",
+      "CC-0010",
+      "CC-0015"
+    ],
+    "summary": "Transaction 3506725 ($1,000.03) triggered a real-time model alert with a score of 0.90, significantly exceeding the card\u2019s median spend of $68.98. The device was flagged as new for this account, but match flags were consistent. The case was closed as legitimate, aligning with similar cleared cases where model scores between 0.84-0.92 were confirmed as valid transactions. No fraud pattern was identified, and exposure was zero.",
+    "written_to_graph": false,
+    "graph_case_id": ""
+  },
+  "evidence_requests": [],
+  "next_best_actions": {
+    "initial": [
+      {
+        "action": "ALLOW_TRANSACTION",
+        "route": "auto",
+        "reason": "6: probability 0.08 <= 0.15 on 4 independent signals"
+      },
+      {
+        "action": "CLOSE_NO_FRAUD",
+        "route": "auto",
+        "reason": "6: alert explained by the cardholder's own behaviour"
+      }
+    ],
+    "final": [
+      {
+        "action": "ALLOW_TRANSACTION",
+        "route": "auto",
+        "reason": "6: probability 0.08 <= 0.15 on 4 independent signals"
+      },
+      {
+        "action": "CLOSE_NO_FRAUD",
+        "route": "auto",
+        "reason": "6: alert explained by the cardholder's own behaviour"
+      }
+    ],
+    "what_changed": "nothing"
+  },
+  "sar": {
+    "file": false,
+    "reason": "No report: verdict is legitimate; policy 3a files only for confirmed or strongly suspected fraud.",
+    "narrative": "",
+    "subjects": [],
+    "total_amount_usd": 0,
+    "activity_dates": []
+  },
+  "stop_reason": "Probability 0.08 with 4 independent item(s): past the 0.85/0.15 threshold with two independent items (policy \u00a76).",
+  "tool_calls": 6,
+  "tokens": 836,
+  "latency_s": 1.65
+}

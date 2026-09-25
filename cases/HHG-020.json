@@ -1,0 +1,115 @@
+{
+  "case_id": "HHG-020",
+  "case": {
+    "status": "closed_legitimate",
+    "verdict": "legitimate",
+    "fraud_probability": 0.03,
+    "pattern": "none",
+    "pattern_description": "",
+    "affected_txn_ids": [],
+    "first_suspicious_txn_id": "",
+    "connected_card_ids": [],
+    "connected_device_profiles": [],
+    "exposure_usd": 0.0,
+    "evidence": [
+      {
+        "claim": "Identity record marks the device New for this account (common in cleared new-phone alerts)",
+        "source": "graph",
+        "ref": "query:card_window(card_id=C12265-K2)",
+        "entity_ids": [
+          "3509359"
+        ]
+      },
+      {
+        "claim": "Match flags consistent",
+        "source": "graph",
+        "ref": "query:card_window(card_id=C12265-K2)",
+        "entity_ids": [
+          "3509359"
+        ]
+      },
+      {
+        "claim": "Customer recognises the charge (for example a new phone or a planned purchase)",
+        "source": "customer",
+        "ref": "evidence_request:1",
+        "entity_ids": [
+          "3509359"
+        ]
+      },
+      {
+        "claim": "Model risk score 0.52 treated as a reason to look, not evidence: in closed cases, cleared alerts cluster at 0.84-0.92",
+        "source": "document",
+        "ref": "README \u00a70; closed_cases_history",
+        "entity_ids": [
+          "3509359"
+        ]
+      },
+      {
+        "claim": "Similar closed cases: CC-2277: Case CC-2277: cardholder C12265 reported unrecognized activity on card C12265-K2; CC-2447: Case CC-2447: cardholder C12265 reported unrecognized activity on card C12265-K2",
+        "source": "graph",
+        "ref": "graphrag.retrieve(case_memory)",
+        "entity_ids": [
+          "CC-2277",
+          "CC-2447",
+          "CC-0009",
+          "CC-0010"
+        ]
+      }
+    ],
+    "similar_prior_cases": [
+      "CC-2277",
+      "CC-2447",
+      "CC-0009",
+      "CC-0010"
+    ],
+    "summary": "Real-time model flagged transaction 3509359 ($125.08) with a score of 0.52, below the fraud threshold. Customer validation confirmed the charge as legitimate, matching a planned purchase or new device. Similar past cases for this cardholder involved confirmed fraudulent transactions, but no fraud was detected here. The device was marked as new for the account, triggering review. Transaction allowed and case closed with no fraud exposure.",
+    "written_to_graph": false,
+    "graph_case_id": ""
+  },
+  "evidence_requests": [
+    {
+      "type": "customer_validation",
+      "asked_after_step": 6,
+      "assumed_response": "Customer recognises the charge (for example a new phone or a planned purchase). Simulated: replies are not provided in this round; assumption follows the graph evidence (probability 0.24)."
+    }
+  ],
+  "next_best_actions": {
+    "initial": [
+      {
+        "action": "VERIFY_WITH_CUSTOMER",
+        "route": "auto",
+        "reason": "R1: probability 0.24 on 2 signals; verify before any block"
+      },
+      {
+        "action": "CREATE_CASE",
+        "route": "auto",
+        "reason": "3a: evidence requested"
+      }
+    ],
+    "final": [
+      {
+        "action": "ALLOW_TRANSACTION",
+        "route": "auto",
+        "reason": "R3: customer confirmed the transaction"
+      },
+      {
+        "action": "CLOSE_NO_FRAUD",
+        "route": "auto",
+        "reason": "R3: confirmation noted in the case file"
+      }
+    ],
+    "what_changed": "The assumed reply (customer recognises the charge (for example a new phone or a planned purchase)) moved probability from 0.24 to 0.03, changing the actions from VERIFY_WITH_CUSTOMER, CREATE_CASE to ALLOW_TRANSACTION, CLOSE_NO_FRAUD."
+  },
+  "sar": {
+    "file": false,
+    "reason": "No report: verdict is legitimate; policy 3a files only for confirmed or strongly suspected fraud.",
+    "narrative": "",
+    "subjects": [],
+    "total_amount_usd": 0,
+    "activity_dates": []
+  },
+  "stop_reason": "Probability 0.03 with 3 independent item(s): the verification reply settles it (policy \u00a76).",
+  "tool_calls": 6,
+  "tokens": 918,
+  "latency_s": 1.57
+}

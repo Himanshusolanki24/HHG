@@ -1,0 +1,36 @@
+USE GRAPH FraudGraph
+// Files come from `python tg.py setup` (tg.export_csv): the cached, card-resolved transactions and closed cases.
+CREATE LOADING JOB load_tx FOR GRAPH FraudGraph {
+  DEFINE FILENAME f_tx;
+  LOAD f_tx
+    TO VERTEX Transaction VALUES ($"TransactionID", $"TransactionAmt", $"ProductCD", $"card4", $"card6", $"addr1", $"addr2",
+      $"dist1", $"P_emaildomain", $"R_emaildomain", $"M4", $"M6", $"customer_id", $"ts", $"channel", $"risk_score",
+      $"card_id", $"device", $"device_specific", $"DeviceType", $"id_15", $"id_23"),
+    TO VERTEX Customer VALUES ($"customer_id"),
+    TO VERTEX Card VALUES ($"card_id", $"card4", $"card6"),
+    TO EDGE OWNS VALUES ($"customer_id", $"card_id"),
+    TO EDGE MADE VALUES ($"card_id", $"TransactionID"),
+    TO VERTEX DeviceProfile VALUES ($"device") WHERE $"device" != "",
+    TO EDGE FROM_DEVICE VALUES ($"TransactionID", $"device") WHERE $"device" != "",
+    TO VERTEX EmailDomain VALUES ($"P_emaildomain") WHERE $"P_emaildomain" != "",
+    TO EDGE PURCHASER_EMAIL VALUES ($"TransactionID", $"P_emaildomain") WHERE $"P_emaildomain" != "",
+    TO VERTEX BillingRegion VALUES ($"addr1") WHERE $"addr1" != "",
+    TO EDGE BILLED_IN VALUES ($"TransactionID", $"addr1") WHERE $"addr1" != ""
+  USING header="true", separator=",", QUOTE="double";
+}
+CREATE LOADING JOB load_cases FOR GRAPH FraudGraph {
+  DEFINE FILENAME f_cases;
+  LOAD f_cases
+    TO VERTEX ClosedCase VALUES ($"case_id", $"customer_id", $"card_id", $"opened_at", $"closed_at", $"outcome", $"pattern",
+      $"first_fraud_txn_id", $"n_txns", $"exposure_usd", $"actions_taken", $"report_filed", $"analyst_notes"),
+    TO EDGE ON_CARD VALUES ($"case_id", $"card_id")
+  USING header="true", separator=",", QUOTE="double";
+}
+CREATE LOADING JOB load_case_txn FOR GRAPH FraudGraph {
+  DEFINE FILENAME f_ct;
+  LOAD f_ct TO EDGE INVOLVES VALUES ($"case_id", $"t") USING header="true", separator=",";
+}
+CREATE LOADING JOB load_case_conn FOR GRAPH FraudGraph {
+  DEFINE FILENAME f_cc;
+  LOAD f_cc TO EDGE CONNECTED_TO VALUES ($"case_id", $"c") USING header="true", separator=",";
+}

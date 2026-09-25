@@ -1,0 +1,119 @@
+{
+  "case_id": "HHG-018",
+  "case": {
+    "status": "closed_fraud",
+    "verdict": "fraud",
+    "fraud_probability": 0.97,
+    "pattern": "out_of_region_use",
+    "pattern_description": "",
+    "affected_txn_ids": [
+      "3491361"
+    ],
+    "first_suspicious_txn_id": "3491361",
+    "connected_card_ids": [],
+    "connected_device_profiles": [],
+    "exposure_usd": 39.08,
+    "evidence": [
+      {
+        "claim": "Card-present purchase (no device record)",
+        "source": "graph",
+        "ref": "query:card_window(card_id=C02354-K2)",
+        "entity_ids": [
+          "3491361"
+        ]
+      },
+      {
+        "claim": "Billing region 126 is away from the card's most-used in-person region 325",
+        "source": "graph",
+        "ref": "query:card_window(card_id=C02354-K2)",
+        "entity_ids": [
+          "3491361"
+        ]
+      },
+      {
+        "claim": "Match flags show a mismatch (M4=M0 or M6=F; unnamed Vesta features)",
+        "source": "graph",
+        "ref": "query:card_window(card_id=C02354-K2)",
+        "entity_ids": [
+          "3491361"
+        ]
+      },
+      {
+        "claim": "Customer states they did not make the purchase",
+        "source": "customer",
+        "ref": "trigger:customer_report",
+        "entity_ids": [
+          "3491361"
+        ]
+      },
+      {
+        "claim": "Model risk score 0.48 treated as a reason to look, not evidence: in closed cases, cleared alerts cluster at 0.84-0.92",
+        "source": "document",
+        "ref": "README \u00a70; closed_cases_history",
+        "entity_ids": [
+          "3491361"
+        ]
+      },
+      {
+        "claim": "Similar closed cases: CC-3267: Case CC-3267: cardholder C13140 reported unrecognized activity on card C13140-K1; CC-3259: Case CC-3259: cardholder C11543 reported unrecognized activity on card C11543-K2",
+        "source": "graph",
+        "ref": "graphrag.retrieve(case_memory)",
+        "entity_ids": [
+          "CC-3267",
+          "CC-3259",
+          "CC-0043",
+          "CC-0631"
+        ]
+      }
+    ],
+    "similar_prior_cases": [
+      "CC-3267",
+      "CC-3259",
+      "CC-0043",
+      "CC-0631"
+    ],
+    "summary": "Customer C02354 reported an unauthorized $39.08 card-present transaction on card C02354-K2, flagged for out-of-region use. The purchase occurred in billing region 126, inconsistent with the card\u2019s typical in-person region 325. Match flags and customer denial support fraud suspicion. Similar cases (CC-3267, CC-3259) involved confirmed fraudulent card-present transactions in unrelated billing regions. The card was blocked, and no further evidence was requested before closure.",
+    "written_to_graph": false,
+    "graph_case_id": ""
+  },
+  "evidence_requests": [],
+  "next_best_actions": {
+    "initial": [
+      {
+        "action": "BLOCK_CARD",
+        "route": "L1",
+        "reason": "R2: customer denies the transaction; exposure $39.08 <= $2,500"
+      },
+      {
+        "action": "CREATE_CASE",
+        "route": "auto",
+        "reason": "R2: customer dispute"
+      }
+    ],
+    "final": [
+      {
+        "action": "BLOCK_CARD",
+        "route": "L1",
+        "reason": "R2: customer denies the transaction; exposure $39.08 <= $2,500"
+      },
+      {
+        "action": "CREATE_CASE",
+        "route": "auto",
+        "reason": "R2: customer dispute"
+      }
+    ],
+    "what_changed": "nothing"
+  },
+  "sar": {
+    "file": false,
+    "reason": "No report: policy 3a thresholds not met (exposure $39.08 is under $1,000, no shared device, region cluster or coordinated pattern).",
+    "narrative": "",
+    "subjects": [],
+    "total_amount_usd": 0,
+    "activity_dates": []
+  },
+  "stop_reason": "Probability 0.97 with 4 independent item(s): past the 0.85/0.15 threshold with two independent items (policy \u00a76).",
+  "tool_calls": 5,
+  "tokens": 971,
+  "latency_s": 1.78
+}

@@ -1,0 +1,109 @@
+{
+  "case_id": "HHG-009",
+  "case": {
+    "status": "closed_fraud",
+    "verdict": "fraud",
+    "fraud_probability": 0.94,
+    "pattern": "card_not_present_fraud",
+    "pattern_description": "",
+    "affected_txn_ids": [
+      "3581141"
+    ],
+    "first_suspicious_txn_id": "3581141",
+    "connected_card_ids": [],
+    "connected_device_profiles": [],
+    "exposure_usd": 30.02,
+    "evidence": [
+      {
+        "claim": "Online purchase from a device the identity record marks Found",
+        "source": "graph",
+        "ref": "query:card_window(card_id=C08299-K1)",
+        "entity_ids": [
+          "3581141"
+        ]
+      },
+      {
+        "claim": "Match flags consistent",
+        "source": "graph",
+        "ref": "query:card_window(card_id=C08299-K1)",
+        "entity_ids": [
+          "3581141"
+        ]
+      },
+      {
+        "claim": "Customer states they did not make the purchase",
+        "source": "customer",
+        "ref": "trigger:customer_report",
+        "entity_ids": [
+          "3581141"
+        ]
+      },
+      {
+        "claim": "Model risk score 0.28 treated as a reason to look, not evidence: in closed cases, cleared alerts cluster at 0.84-0.92",
+        "source": "document",
+        "ref": "README \u00a70; closed_cases_history",
+        "entity_ids": [
+          "3581141"
+        ]
+      },
+      {
+        "claim": "Similar closed cases: CC-2527: Case CC-2527: cardholder C10752 reported unrecognized activity on card C10752-K1; CC-1324: Case CC-1324: cardholder C05106 reported unrecognized activity on card C05106-K1",
+        "source": "graph",
+        "ref": "graphrag.retrieve(case_memory)",
+        "entity_ids": [
+          "CC-2527",
+          "CC-1324",
+          "CC-0257"
+        ]
+      }
+    ],
+    "similar_prior_cases": [
+      "CC-2527",
+      "CC-1324",
+      "CC-0257"
+    ],
+    "summary": "Customer C08299 reported an unauthorized $30.02 online purchase on card C08299-K1, flagged by device and match inconsistencies. Fraud probability is high at 0.94, with similar confirmed fraud cases (CC-2527, CC-1324, CC-0257) involving online purchases. The card was blocked, and a case was created. No further evidence was requested, and exposure is limited to $30.02. Pattern matches card-not-present fraud with prior confirmed cases of similar activity.",
+    "written_to_graph": false,
+    "graph_case_id": ""
+  },
+  "evidence_requests": [],
+  "next_best_actions": {
+    "initial": [
+      {
+        "action": "BLOCK_CARD",
+        "route": "L1",
+        "reason": "R2: customer denies the transaction; exposure $30.02 <= $2,500"
+      },
+      {
+        "action": "CREATE_CASE",
+        "route": "auto",
+        "reason": "R2: customer dispute"
+      }
+    ],
+    "final": [
+      {
+        "action": "BLOCK_CARD",
+        "route": "L1",
+        "reason": "R2: customer denies the transaction; exposure $30.02 <= $2,500"
+      },
+      {
+        "action": "CREATE_CASE",
+        "route": "auto",
+        "reason": "R2: customer dispute"
+      }
+    ],
+    "what_changed": "nothing"
+  },
+  "sar": {
+    "file": false,
+    "reason": "No report: policy 3a thresholds not met (exposure $30.02 is under $1,000, no shared device, region cluster or coordinated pattern).",
+    "narrative": "",
+    "subjects": [],
+    "total_amount_usd": 0,
+    "activity_dates": []
+  },
+  "stop_reason": "Probability 0.94 with 2 independent item(s): past the 0.85/0.15 threshold with two independent items (policy \u00a76).",
+  "tool_calls": 5,
+  "tokens": 932,
+  "latency_s": 2.77
+}

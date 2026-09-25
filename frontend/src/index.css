@@ -18,8 +18,8 @@
   --risk-low: #3db37a;
   --risk-med: #e2a23a;
   --risk-high: #e5564e;
-  --t-account: #8fa6c0; --t-card: #a898c8; --t-device: #7fb0b8; --t-email: #a9a39a;
-  --t-ip: #9aa0b3; --t-transaction: #6f7f96; --t-prior_case: #b690a8;
+  --t-customer: #8fa6c0; --t-card: #a898c8; --t-device: #7fb0b8; --t-email: #a9a39a;
+  --t-region: #9aa0b3; --t-transaction: #6f7f96; --t-prior_case: #b690a8;
   color-scheme: dark;
 }
 [data-theme='light'] {
@@ -38,8 +38,8 @@
   --risk-low: #1b8653;
   --risk-med: #b0741a;
   --risk-high: #c6342d;
-  --t-account: #6f89a8; --t-card: #8a78ae; --t-device: #5f949d; --t-email: #8f887d;
-  --t-ip: #7c8397; --t-transaction: #56667d; --t-prior_case: #9a7189;
+  --t-customer: #6f89a8; --t-card: #8a78ae; --t-device: #5f949d; --t-email: #8f887d;
+  --t-region: #7c8397; --t-transaction: #56667d; --t-prior_case: #9a7189;
   color-scheme: light;
 }
 

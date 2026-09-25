@@ -1,8 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useCases } from '../hooks.ts'
 import { useStore } from '../store.ts'
-import { liveStatus } from '../derive.ts'
-import { isMock } from '../api/client.ts'
+import { PATTERN_LABEL, liveStatus } from '../derive.ts'
 import type { Case, CaseStatus, Pattern } from '../api/schemas.ts'
 import { Prov, RiskChip, Skeleton, cn } from './ui.tsx'
 
@@ -12,16 +11,15 @@ export const STATUS: Record<CaseStatus, string> = {
 export const TRIGGER: Record<Case['trigger'], string> = {
   risk_score: 'Risk score', customer_report: 'Customer report', analyst_request: 'Analyst request',
 }
-export const PATTERN: Record<Pattern, string> = {
-  card_testing: 'Card testing', account_takeover: 'Account takeover', mule_network: 'Mule network',
-  app_scam: 'APP scam', synthetic_identity: 'Synthetic identity', friendly_fraud: 'Friendly fraud',
-}
+export { PATTERN_LABEL as PATTERN } from '../derive.ts'
 
-// ponytail: mock mode pins "now" to the fixture day so time-in-state reads sensibly on any date.
-const NOW = isMock ? Date.parse('2026-09-24T09:58:00Z') : Date.now()
+// ponytail: the dataset ends 2016-12-31, so "now" is pinned there; otherwise every case would read "3,500 days".
+const NOW = Date.parse('2016-12-31T23:59:00Z')
 export function since(iso: string) {
   const m = Math.max(0, Math.round((NOW - Date.parse(iso)) / 60000))
-  return m < 60 ? `${m}m` : `${Math.floor(m / 60)}h ${String(m % 60).padStart(2, '0')}m`
+  if (m < 60) return `${m}m`
+  if (m < 48 * 60) return `${Math.floor(m / 60)}h ${String(m % 60).padStart(2, '0')}m`
+  return `${Math.floor(m / 1440)}d`
 }
 
 const isTyping = (t: EventTarget | null) => t instanceof HTMLElement && (t.isContentEditable || /INPUT|SELECT|TEXTAREA/.test(t.tagName))
@@ -95,13 +93,13 @@ export function CaseQueue() {
             className="h-6 flex-1 rounded-sm border border-line bg-bg px-1 text-xs text-fg"
           >
             <option value="all">All patterns</option>
-            {Object.entries(PATTERN).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+            {Object.entries(PATTERN_LABEL).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
           </select>
         </label>
       </header>
 
       <div className="grid grid-cols-[1fr_64px_36px_52px] gap-x-2 border-b border-line px-3 py-1 text-2xs text-faint">
-        <span>Case</span><span>Risk</span><span className="text-right">Conf</span><span className="text-right">In state</span>
+        <span>Case</span><span>Fraud p</span><span className="text-right">Conf</span><span className="text-right">In state</span>
       </div>
 
       <div ref={listRef} role="listbox" aria-label="Cases" aria-activedescendant={rows[activeIdx] ? `case-${rows[activeIdx].id}` : undefined} tabIndex={0} className="min-h-0 flex-1 overflow-y-auto">
@@ -129,8 +127,8 @@ export function CaseQueue() {
               <div className="font-medium">{c.id}</div>
               <div className="truncate text-xs text-muted" title={c.title}>{c.title}</div>
               <div className="mt-0.5 flex gap-2 whitespace-nowrap text-2xs text-faint">
-                <span className="text-muted">{STATUS[c.status]}</span><span className="truncate">{TRIGGER[c.trigger]}</span>
-                {c.hasRun && <span className="ml-auto shrink-0 text-accent">Agent run</span>}
+                <span className="text-muted">{STATUS[c.status]}</span><span className="truncate">{c.cardId}</span>
+                {c.modelScore != null && <span className="ml-auto shrink-0">model {c.modelScore.toFixed(2)}</span>}
               </div>
             </div>
             <div className="text-xs">
